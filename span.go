@@ -42,8 +42,8 @@ type Annotation struct {
 	Value     string `json:"value"`
 }
 
-func (s *Span) Submit(c *Client) {
-	c.Submit(*s)
+func (s *Span) Submit(c *Client) error {
+	return c.Submit(*s)
 }
 
 func (s *Span) AddAnnotation(timestamp time.Time, value string) {
