@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -17,14 +18,17 @@ var backoffSchedule = []time.Duration{
 type Client struct {
 	URL    string
 	Client http.Client
+	Logger *log.Logger
 }
 
-func (c *Client) Submit(spans ...Span) error {
+func (c *Client) Submit(spans ...*Span) error {
 	var err error
 	var response *http.Response
 
-	body, _ := json.Marshal(spans)
-	fmt.Println(string(body))
+	body, err := json.Marshal(spans)
+	if err != nil {
+		return err
+	}
 
 	for _, backoff := range backoffSchedule {
 		response, err = c.Client.Post(c.URL, "application/json", bytes.NewBuffer(body))

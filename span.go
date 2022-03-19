@@ -1,6 +1,7 @@
 package simpletrace
 
 import (
+	"sync"
 	"time"
 )
 
@@ -23,15 +24,16 @@ type Span struct {
 	Name           string            `json:"name,omitempty"`
 	Tags           map[string]string `json:"tags,omitempty"`
 	Shared         bool              `json:"shared"`
-	LocalEndpoint  Service           `json:"localEndpoint"`
-	RemoteEndpoint Service           `json:"remoteEndpoint"`
-	Annotations    []Annotation      `json:"annotations"`
+	LocalEndpoint  Service           `json:"localEndpoint,omitempty"`
+	RemoteEndpoint Service           `json:"remoteEndpoint,omitempty"`
+	Annotations    []Annotation      `json:"annotations,omitempty"`
 
-	StartTime time.Time `json:"-"`
+	startTime time.Time
+	mutex     sync.Mutex
 }
 
 type Service struct {
-	ServiceName string `json:"serviceName"`
+	ServiceName string `json:"serviceName,omitempty"`
 	IPv4        string `json:"ipv4,omitempty"`
 	IPv6        string `json:"ipv6,omitempty"`
 	Port        int    `json:"port,omitempty"`
@@ -43,7 +45,7 @@ type Annotation struct {
 }
 
 func (s *Span) Submit(c *Client) error {
-	return c.Submit(*s)
+	return c.Submit(s)
 }
 
 func (s *Span) AddAnnotation(timestamp time.Time, value string) {
@@ -53,17 +55,30 @@ func (s *Span) AddAnnotation(timestamp time.Time, value string) {
 	})
 }
 
-func NewSpan(name string) Span {
-	span := Span{
+func (s *Span) Tag(key, value string) {
+	s.mutex.Lock()
+
+	if _, found := s.Tags[key]; found {
+		s.mutex.Unlock()
+		return
+	}
+
+	s.Tags[key] = value
+	s.mutex.Unlock()
+}
+
+func NewSpan(name string) *Span {
+	span := &Span{
 		Id:      randomID(8),
-		TraceId: randomID(8),
+		TraceId: randomID(16),
 		Name:    name,
 	}
+	span.ParentId = span.Id
 	span.Tags = make(map[string]string)
 	return span
 }
 
-func (s *Span) NewChildSpan(name string) Span {
+func (s *Span) NewChildSpan(name string) *Span {
 	sub := NewSpan(name)
 	sub.TraceId = s.TraceId
 	sub.ParentId = s.Id
@@ -71,11 +86,11 @@ func (s *Span) NewChildSpan(name string) Span {
 }
 
 func (s *Span) Start() {
-	s.StartTime = time.Now()
+	s.startTime = time.Now()
 	s.Timestamp = time.Now().UnixMicro()
 }
 
 func (s *Span) Finalize() *Span {
-	s.Duration = int(time.Since(s.StartTime).Microseconds())
+	s.Duration = int(time.Since(s.startTime).Microseconds())
 	return s
 }
