@@ -1,6 +1,7 @@
 package simpletrace
 
 import (
+	"net"
 	"sync"
 	"time"
 )
@@ -34,8 +35,8 @@ type Span struct {
 
 type Service struct {
 	ServiceName string `json:"serviceName,omitempty"`
-	IPv4        string `json:"ipv4,omitempty"`
-	IPv6        string `json:"ipv6,omitempty"`
+	IPv4        net.IP `json:"ipv4,omitempty"`
+	IPv6        net.IP `json:"ipv6,omitempty"`
 	Port        int    `json:"port,omitempty"`
 }
 
@@ -55,6 +56,7 @@ func (s *Span) AddAnnotation(timestamp time.Time, value string) {
 	})
 }
 
+// Tag - assign a tag to the span
 func (s *Span) Tag(key, value string) {
 	s.mutex.Lock()
 
@@ -67,17 +69,25 @@ func (s *Span) Tag(key, value string) {
 	s.mutex.Unlock()
 }
 
-func NewSpan(name string) *Span {
+// NewSpan - create a new span; assign default values; generate random IDs
+func NewSpan(name string, options ...SpanOption) *Span {
+	// create basic span
 	span := &Span{
+		Name:    name,
 		Id:      randomID(8),
 		TraceId: randomID(16),
-		Name:    name,
+		mutex:   sync.Mutex{},
+		Tags:    make(map[string]string),
 	}
 	span.ParentId = span.Id
-	span.Tags = make(map[string]string)
+	// apply span options
+	for _, option := range options {
+		option(span)
+	}
 	return span
 }
 
+// NewChildSpan - Create a child Span of the Span s. Rewrite the TraceId and ParentId
 func (s *Span) NewChildSpan(name string) *Span {
 	sub := NewSpan(name)
 	sub.TraceId = s.TraceId
