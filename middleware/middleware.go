@@ -2,9 +2,10 @@ package middleware
 
 import (
 	"fmt"
-	"golang.fsrv.services/simpletrace"
 	"log"
 	"net/http"
+
+	"golang.fsrv.services/simpletrace"
 )
 
 type handler struct {
