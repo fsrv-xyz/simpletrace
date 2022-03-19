@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"golang.fsrv.services/simpletrace"
 	"log"
 	"net/http"
+
+	"golang.fsrv.services/simpletrace"
 )
 
 type handler struct {
@@ -27,13 +28,14 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 	log.Printf("trace=%+q", span.TraceId)
 
-	recorder := &StatusRecorder{
+	recorder := &ResponseWriter{
 		ResponseWriter: writer,
 	}
 
 	span.Start()
 	h.next.ServeHTTP(recorder, request)
 	span.Tag("http.response.code", string(recorder.Status))
+	span.Tag("http.response.size", string(recorder.Size))
 	span.Finalize().Submit(h.client)
 }
 
