@@ -20,14 +20,20 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		simpletrace.RemoteEndpoint("client", request.RemoteAddr),
 		simpletrace.LocalEndpoint("server", ""),
 	)
-	span.Tag("http.host", request.Host)
-	span.Tag("http.method", request.Method)
-	span.Tag("http.proto", request.Proto)
-	span.Tag("http.user-agent", request.Header.Get("user-agent"))
+	span.Tag("http.request.host", request.Host)
+	span.Tag("http.request.method", request.Method)
+	span.Tag("http.request.proto", request.Proto)
+	span.Tag("http.request.user-agent", request.Header.Get("user-agent"))
 
 	log.Printf("trace=%+q", span.TraceId)
+
+	recorder := &StatusRecorder{
+		ResponseWriter: writer,
+	}
+
 	span.Start()
-	h.next.ServeHTTP(writer, request)
+	h.next.ServeHTTP(recorder, request)
+	span.Tag("http.response.code", string(recorder.Status))
 	span.Finalize().Submit(h.client)
 }
 
