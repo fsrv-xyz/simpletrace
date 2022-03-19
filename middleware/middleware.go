@@ -3,6 +3,7 @@ package middleware
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"golang.fsrv.services/simpletrace"
 )
@@ -34,8 +35,8 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 	span.Start()
 	h.next.ServeHTTP(recorder, request)
-	span.Tag("http.response.code", string(recorder.Status))
-	span.Tag("http.response.size", string(recorder.Size))
+	span.Tag("http.response.code", strconv.Itoa(recorder.Status))
+	span.Tag("http.response.size", strconv.Itoa(recorder.Size))
 	span.Finalize().Submit(h.client)
 }
 
