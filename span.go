@@ -16,9 +16,9 @@ const (
 )
 
 type Span struct {
-	Id             string            `json:"id"`
+	SpanId         string            `json:"id"`
 	TraceId        string            `json:"traceId"`
-	ParentId       string            `json:"parentId,omitempty"`
+	ParentSpanId   string            `json:"parentId,omitempty"`
 	Kind           Kind              `json:"kind,omitempty"`
 	Timestamp      int64             `json:"timestamp"`
 	Duration       int               `json:"duration"`
@@ -74,12 +74,12 @@ func NewSpan(name string, options ...SpanOption) *Span {
 	// create basic span
 	span := &Span{
 		Name:    name,
-		Id:      randomID(8),
+		SpanId:  randomID(8),
 		TraceId: randomID(16),
 		mutex:   sync.Mutex{},
 		Tags:    make(map[string]string),
 	}
-	span.ParentId = span.Id
+	span.ParentSpanId = span.SpanId
 	// apply span options
 	for _, option := range options {
 		option(span)
@@ -87,11 +87,11 @@ func NewSpan(name string, options ...SpanOption) *Span {
 	return span
 }
 
-// NewChildSpan - Create a child Span of the Span s. Rewrite the TraceId and ParentId
+// NewChildSpan - Create a child Span of the Span s. Rewrite the TraceId and ParentSpanId
 func (s *Span) NewChildSpan(name string) *Span {
 	sub := NewSpan(name)
 	sub.TraceId = s.TraceId
-	sub.ParentId = s.Id
+	sub.ParentSpanId = s.SpanId
 	return sub
 }
 

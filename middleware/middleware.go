@@ -22,9 +22,12 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		simpletrace.RemoteEndpoint("client", request.RemoteAddr),
 		simpletrace.LocalEndpoint("server", ""),
 	)
+	// set tags for request values
 	span.Tag("http.request.host", request.Host)
 	span.Tag("http.request.method", request.Method)
 	span.Tag("http.request.proto", request.Proto)
+	span.Tag("http.request.content.length", request.Header.Get("content-length"))
+	span.Tag("http.request.content.type", request.Header.Get("content-type"))
 	span.Tag("http.request.user-agent", request.Header.Get("user-agent"))
 
 	log.Printf("trace=%+q", span.TraceId)
@@ -34,7 +37,14 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	span.Start()
-	h.next.ServeHTTP(recorder, request)
+
+	// enrich http context with tracing information
+	ctx := span.EnrichContext(request.Context(), h.client)
+
+	// forward to handler with enriched context
+	h.next.ServeHTTP(recorder, request.WithContext(ctx))
+
+	// set tags for response values
 	span.Tag("http.response.code", fmt.Sprintf("%d", recorder.Status))
 	span.Tag("http.response.size", fmt.Sprintf("%d", recorder.Size))
 	span.Finalize().Submit(h.client)

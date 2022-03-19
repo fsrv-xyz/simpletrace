@@ -2,21 +2,35 @@ package simpletrace
 
 type SpanOption func(s *Span)
 
-// UseKind - declare the kind of the span
+// UseKind - declare the kind of the Span
 func UseKind(kind Kind) SpanOption {
 	return func(s *Span) {
 		s.Kind = kind
 	}
 }
 
-// Shared - set shared option to span
+// FromParent - set the parent ID of the Span
+func FromParent(parentId string) SpanOption {
+	return func(s *Span) {
+		s.ParentSpanId = parentId
+	}
+}
+
+// TraceID - set the TraceId of the Span
+func TraceID(id string) SpanOption {
+	return func(s *Span) {
+		s.TraceId = id
+	}
+}
+
+// Shared - set shared option to Span
 func Shared() SpanOption {
 	return func(s *Span) {
 		s.Shared = true
 	}
 }
 
-// LocalEndpoint - define the local endpoint of the span; parses the address to IPv6/IPv4 with port if set
+// LocalEndpoint - define the local endpoint of the Span; parses the address to IPv6/IPv4 with port if set
 func LocalEndpoint(name, address string) SpanOption {
 	return func(s *Span) {
 		s.LocalEndpoint = Service{ServiceName: name}
@@ -24,7 +38,7 @@ func LocalEndpoint(name, address string) SpanOption {
 	}
 }
 
-// RemoteEndpoint - define the remote endpoint of the span; parses the address to IPv6/IPv4 with port if set
+// RemoteEndpoint - define the remote endpoint of the Span; parses the address to IPv6/IPv4 with port if set
 func RemoteEndpoint(name, address string) SpanOption {
 	return func(s *Span) {
 		s.RemoteEndpoint = Service{ServiceName: name}
