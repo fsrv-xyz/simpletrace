@@ -16,11 +16,11 @@ type handler struct {
 
 func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	span := simpletrace.NewSpan(
-		request.RequestURI,
-		simpletrace.UseKind(simpletrace.KindServer),
-		simpletrace.Tags(h.defaultTags),
-		simpletrace.RemoteEndpoint("client", request.RemoteAddr),
-		simpletrace.LocalEndpoint("server", ""),
+		simpletrace.OptionName(request.RequestURI),
+		simpletrace.OptionUseKind(simpletrace.KindServer),
+		simpletrace.OptionTags(h.defaultTags),
+		simpletrace.OptionRemoteEndpoint("client", request.RemoteAddr),
+		simpletrace.OptionLocalEndpoint("server", ""),
 	)
 	// set tags for request values
 	span.Tag("http.request.host", request.Host)

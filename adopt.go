@@ -26,14 +26,14 @@ func (s *Span) EnrichContext(ctx context.Context, client *Client) context.Contex
 	return ctx
 }
 
-// SpanFromContextValues - generate a Span with values from ctx
+// SpanFromContextValues - generate the parent Span with values from ctx
 func SpanFromContextValues(ctx context.Context) (*Span, error) {
-	parentId, parentIdFound := ctx.Value(HeaderParentSpanId).(string)
+	spanId, parentIdFound := ctx.Value(HeaderParentSpanId).(string)
 	traceId, traceIdFound := ctx.Value(HeaderTraceId).(string)
 	if !parentIdFound || !traceIdFound {
 		return nil, errors.New("one ore multiple Values not found")
 	}
-	span := NewSpan("", Shared(), FromParent(parentId), TraceID(traceId))
+	span := NewSpan(OptionShared(), OptionSpanID(spanId), OptionFromParent(spanId), OptionTraceID(traceId))
 	return span, nil
 }
 

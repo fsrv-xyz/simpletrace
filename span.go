@@ -70,10 +70,9 @@ func (s *Span) Tag(key, value string) {
 }
 
 // NewSpan - create a new span; assign default values; generate random IDs
-func NewSpan(name string, options ...SpanOption) *Span {
+func NewSpan(options ...SpanOption) *Span {
 	// create basic span
 	span := &Span{
-		Name:    name,
 		SpanId:  randomID(8),
 		TraceId: randomID(16),
 		mutex:   sync.Mutex{},
@@ -88,8 +87,8 @@ func NewSpan(name string, options ...SpanOption) *Span {
 }
 
 // NewChildSpan - Create a child Span of the Span s. Rewrite the TraceId and ParentSpanId
-func (s *Span) NewChildSpan(name string) *Span {
-	sub := NewSpan(name)
+func (s *Span) NewChildSpan(options ...SpanOption) *Span {
+	sub := NewSpan(options...)
 	sub.TraceId = s.TraceId
 	sub.ParentSpanId = s.SpanId
 	return sub
