@@ -6,7 +6,7 @@ import (
 )
 
 func TestSpan_EnrichContext(t *testing.T) {
-	originSpan := NewSpan("test")
+	originSpan := NewSpan(OptionName("test"))
 	ctx := context.Background()
 	newCtx := originSpan.EnrichContext(ctx, &Client{})
 

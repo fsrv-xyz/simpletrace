@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var backoffSchedule = []time.Duration{
+var submitBackoffSchedule = []time.Duration{
 	1 * time.Second,
 	3 * time.Second,
 	10 * time.Second,
@@ -21,6 +21,7 @@ type Client struct {
 	Logger *log.Logger
 }
 
+// Submit - send the spans to the tracing endpoint synchronously
 func (c *Client) Submit(spans ...*Span) error {
 	var err error
 	var response *http.Response
@@ -30,7 +31,7 @@ func (c *Client) Submit(spans ...*Span) error {
 		return err
 	}
 
-	for _, backoff := range backoffSchedule {
+	for _, backoff := range submitBackoffSchedule {
 		response, err = c.Client.Post(c.URL, "application/json", bytes.NewBuffer(body))
 		if err == nil && response.StatusCode == http.StatusAccepted {
 			break
