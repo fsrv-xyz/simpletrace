@@ -48,6 +48,14 @@ func (c *Client) Submit(spans ...*Span) error {
 	return nil
 }
 
+// SubmitAsync - send the spans to the tracing endpoint asynchronous
+func (c *Client) SubmitAsync(errBack chan error, spans ...*Span) {
+	go func(errBack chan error) {
+		errBack <- c.Submit(spans...)
+	}(errBack)
+}
+
+// NewClient - instantiate a new client with given url
 func NewClient(url string) Client {
 	var c Client
 	c.URL = url
