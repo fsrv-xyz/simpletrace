@@ -49,7 +49,7 @@ func ClientFromContextValues(ctx context.Context) (*Client, error) {
 }
 
 // SpanFromHttpHeader - generate the parent Span with parameters from request headers
-func SpanFromHttpHeader(r http.Request) (*Span, error) {
+func SpanFromHttpHeader(r *http.Request) (*Span, error) {
 	spanId := r.Header.Get(string(HeaderParentSpanId))
 	traceId := r.Header.Get(string(HeaderTraceId))
 	if validateSpanID(spanId) || validateTraceID(traceId) {
