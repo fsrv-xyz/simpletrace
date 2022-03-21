@@ -52,7 +52,7 @@ func ClientFromContextValues(ctx context.Context) (*Client, error) {
 func SpanFromHttpHeader(r *http.Request) (*Span, error) {
 	spanId := r.Header.Get(string(HeaderParentSpanId))
 	traceId := r.Header.Get(string(HeaderTraceId))
-	if validateSpanID(spanId) || validateTraceID(traceId) {
+	if !validateSpanID(spanId) || !validateTraceID(traceId) {
 		return nil, errors.New("one ore multiple header values not found/malformed")
 	}
 	span := NewSpan(OptionShared(), OptionSpanID(spanId), OptionFromParent(spanId), OptionTraceID(traceId))
