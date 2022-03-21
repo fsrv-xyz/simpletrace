@@ -31,8 +31,8 @@ func (s *Span) EnrichContext(ctx context.Context, client *Client) context.Contex
 func SpanFromContextValues(ctx context.Context) (*Span, error) {
 	spanId, parentIdFound := ctx.Value(HeaderParentSpanId).(string)
 	traceId, traceIdFound := ctx.Value(HeaderTraceId).(string)
-	if !parentIdFound || !traceIdFound {
-		return nil, errors.New("one ore multiple Values not found")
+	if !parentIdFound || !validateSpanID(spanId) || !traceIdFound || !validateTraceID(traceId) {
+		return nil, errors.New("one ore multiple context values not found/malformed")
 	}
 	span := NewSpan(OptionShared(), OptionSpanID(spanId), OptionFromParent(spanId), OptionTraceID(traceId))
 	return span, nil
@@ -53,7 +53,7 @@ func SpanFromHttpHeader(r http.Request) (*Span, error) {
 	spanId := r.Header.Get(string(HeaderParentSpanId))
 	traceId := r.Header.Get(string(HeaderTraceId))
 	if validateSpanID(spanId) || validateTraceID(traceId) {
-		return nil, errors.New("one ore multiple Values not found/malformed")
+		return nil, errors.New("one ore multiple header values not found/malformed")
 	}
 	span := NewSpan(OptionShared(), OptionSpanID(spanId), OptionFromParent(spanId), OptionTraceID(traceId))
 	return span, nil
