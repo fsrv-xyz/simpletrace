@@ -57,7 +57,8 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	// set tags for response values
 	span.Tag("http.response.code", fmt.Sprintf("%d", recorder.Status))
 	span.Tag("http.response.size", fmt.Sprintf("%d", recorder.Size))
-	span.Finalize().Submit(h.client)
+	span.Finalize()
+	h.client.SubmitAsync(nil, span)
 }
 
 type Option func(*handler)
