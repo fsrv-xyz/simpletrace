@@ -3,8 +3,10 @@ package simpletrace
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net"
+	"regexp"
 	"strconv"
 )
 
@@ -43,4 +45,16 @@ func (s *Service) separateAddresses(address string) (err error) {
 		s.IPv4 = ip
 	}
 	return nil
+}
+
+func validateSpanID(id string) bool {
+	return validateId(id, "16")
+}
+func validateTraceID(id string) bool {
+	return validateId(id, "16,32")
+}
+
+func validateId(id, len string) bool {
+	regex := regexp.MustCompile(fmt.Sprintf(`^[a-f0-9]{%v}$`, len))
+	return regex.MatchString(id)
 }

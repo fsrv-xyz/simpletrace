@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 )
 
 type Header string
@@ -45,4 +46,15 @@ func ClientFromContextValues(ctx context.Context) (*Client, error) {
 	}
 	client := NewClient(clientURL)
 	return &client, nil
+}
+
+// SpanFromHttpHeader - generate the parent Span with parameters from request headers
+func SpanFromHttpHeader(r http.Request) (*Span, error) {
+	spanId := r.Header.Get(string(HeaderParentSpanId))
+	traceId := r.Header.Get(string(HeaderTraceId))
+	if validateSpanID(spanId) || validateTraceID(traceId) {
+		return nil, errors.New("one ore multiple Values not found/malformed")
+	}
+	span := NewSpan(OptionShared(), OptionSpanID(spanId), OptionFromParent(spanId), OptionTraceID(traceId))
+	return span, nil
 }
