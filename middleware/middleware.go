@@ -22,6 +22,14 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 		simpletrace.OptionRemoteEndpoint("client", request.RemoteAddr),
 		simpletrace.OptionLocalEndpoint("server", ""),
 	)
+
+	// load values from http headers
+	parentSpan, err := simpletrace.SpanFromHttpHeader(*request)
+	if err != nil {
+		span.ParentSpanId = parentSpan.SpanId
+		span.TraceId = parentSpan.TraceId
+	}
+
 	// set tags for request values
 	span.Tag("http.request.host", request.Host)
 	span.Tag("http.request.method", request.Method)
