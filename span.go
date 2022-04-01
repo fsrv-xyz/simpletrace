@@ -96,19 +96,18 @@ func NewSpan(options ...SpanOption) *Span {
 		mutex:   sync.Mutex{},
 		Tags:    make(map[string]string),
 	}
-	span.ParentSpanId = span.SpanId
+	options = append(options, OptionFromParent(span.SpanId))
+
 	// apply span options
-	for _, option := range options {
-		option(span)
-	}
+	span.Use(options...)
 	return span
 }
 
 // NewChildSpan - Create a child Span of the Span s. Rewrite the TraceId and ParentSpanId
 func (s *Span) NewChildSpan(options ...SpanOption) *Span {
 	sub := NewSpan(options...)
-	sub.TraceId = s.TraceId
-	sub.ParentSpanId = s.SpanId
+	sub.Use(OptionTraceID(s.TraceId))
+	sub.Use(OptionFromParent(s.SpanId))
 	return sub
 }
 

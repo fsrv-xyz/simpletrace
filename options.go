@@ -3,8 +3,11 @@ package simpletrace
 type SpanOption func(s *Span)
 
 // Use makes usage of options possible for already defined spans
-func (s *Span) Use(option SpanOption) {
-	option(s)
+func (s *Span) Use(options ...SpanOption) *Span {
+	for _, option := range options {
+		option(s)
+	}
+	return s
 }
 
 // OptionName - declare the name of the Span

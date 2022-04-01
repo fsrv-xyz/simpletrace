@@ -26,10 +26,10 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	// load values from http headers
 	parentSpan, err := simpletrace.SpanFromHttpHeader(request)
 	if err != nil {
-		log.Printf("error while assembling span from headers %+q", err)
+		log.Printf("cannot assemble span from headers %+q", err)
 	} else {
-		span.ParentSpanId = parentSpan.SpanId
-		span.TraceId = parentSpan.TraceId
+		span.Use(simpletrace.OptionFromParent(parentSpan.SpanId))
+		span.Use(simpletrace.OptionTraceID(parentSpan.TraceId))
 	}
 
 	// set tags for request values
