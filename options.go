@@ -2,6 +2,11 @@ package simpletrace
 
 type SpanOption func(s *Span)
 
+// Use makes usage of options possible for already defined spans
+func (s *Span) Use(option SpanOption) {
+	option(s)
+}
+
 // OptionName - declare the name of the Span
 func OptionName(name string) SpanOption {
 	return func(s *Span) {
@@ -9,8 +14,14 @@ func OptionName(name string) SpanOption {
 	}
 }
 
-// OptionUseKind - declare the kind of the Span
+// OptionUseKind - same as OptionOfKind
+// Deprecated: use OptionOfKind instead
 func OptionUseKind(kind Kind) SpanOption {
+	return OptionOfKind(kind)
+}
+
+// OptionOfKind - declare the kind of the Span
+func OptionOfKind(kind Kind) SpanOption {
 	return func(s *Span) {
 		s.Kind = kind
 	}

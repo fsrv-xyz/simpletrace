@@ -17,7 +17,7 @@ type handler struct {
 func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	span := simpletrace.NewSpan(
 		simpletrace.OptionName(request.RequestURI),
-		simpletrace.OptionUseKind(simpletrace.KindServer),
+		simpletrace.OptionOfKind(simpletrace.KindServer),
 		simpletrace.OptionTags(h.defaultTags),
 		simpletrace.OptionRemoteEndpoint("client", request.RemoteAddr),
 		simpletrace.OptionLocalEndpoint("server", ""),
