@@ -1,6 +1,8 @@
 package simpletrace
 
 import (
+	"encoding/json"
+	"encoding/xml"
 	"net"
 	"sync"
 	"time"
@@ -53,6 +55,22 @@ func (s *Span) AddAnnotation(timestamp time.Time, value string) {
 	s.Annotations = append(s.Annotations, Annotation{
 		Timestamp: timestamp.UnixMicro(),
 		Value:     value,
+	})
+}
+
+func (s *Span) AddJsonAnnotation(timestamp time.Time, value interface{}) {
+	data, _ := json.Marshal(value)
+	s.Annotations = append(s.Annotations, Annotation{
+		Timestamp: timestamp.UnixMicro(),
+		Value:     string(data),
+	})
+}
+
+func (s *Span) AddXMLAnnotation(timestamp time.Time, value interface{}) {
+	data, _ := xml.Marshal(value)
+	s.Annotations = append(s.Annotations, Annotation{
+		Timestamp: timestamp.UnixMicro(),
+		Value:     string(data),
 	})
 }
 
