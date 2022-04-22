@@ -2,6 +2,7 @@ package simpletrace
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -16,9 +17,16 @@ var submitBackoffSchedule = []time.Duration{
 }
 
 type Client struct {
-	URL    string
-	Client http.Client
-	Logger *log.Logger
+	URL       string
+	Client    http.Client
+	Logger    *log.Logger
+	BasicAuth ClientAuth
+}
+
+type ClientAuth struct {
+	Enable   bool
+	Username string
+	Password string
 }
 
 // Submit - send the spans to the tracing endpoint synchronously
@@ -30,9 +38,24 @@ func (c *Client) Submit(spans ...*Span) error {
 	if err != nil {
 		return err
 	}
+	// build request
+	ctx, cancel := context.WithTimeout(context.Background(), 80*time.Millisecond)
+	defer cancel()
+	request, requestBuilderError := http.NewRequestWithContext(ctx, http.MethodPost, c.URL, bytes.NewBuffer(body))
+	if requestBuilderError != nil {
+		return err
+	}
+
+	request.Header.Set("content-type", "application/json")
+
+	// set basic auth headers if enabled
+	if c.BasicAuth.Enable {
+		request.SetBasicAuth(c.BasicAuth.Username, c.BasicAuth.Password)
+	}
 
 	for _, backoff := range submitBackoffSchedule {
-		response, err = c.Client.Post(c.URL, "application/json", bytes.NewBuffer(body))
+		// execute http request; stop if request is accepted on tracing server
+		response, err = c.Client.Do(request)
 		if err == nil && response.StatusCode == http.StatusAccepted {
 			break
 		}
@@ -59,6 +82,6 @@ func (c *Client) SubmitAsync(errBack chan error, spans ...*Span) {
 func NewClient(url string) Client {
 	var c Client
 	c.URL = url
-	c.Client = http.Client{Timeout: 1 * time.Second}
+	c.Client = http.Client{}
 	return c
 }
