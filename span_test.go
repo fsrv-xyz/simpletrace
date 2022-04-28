@@ -1,14 +1,22 @@
 package simpletrace
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"testing"
 	"time"
 )
 
 func TestIntegration(t *testing.T) {
+	submitWorkerInput := make(chan *Span, 2)
+	submitWorkerDone := make(chan bool)
+	ctx, cancelSubmitWorker := context.WithCancel(context.Background())
+
 	// define the tracing client
 	client := NewClient("http://127.0.0.1:9411/spans")
+	client.Logger = log.Default()
+	go client.SubmitAsyncWorker(submitWorkerInput, ctx, submitWorkerDone)
 
 	// define the parent span
 	parentSpan := NewSpan(
@@ -40,15 +48,25 @@ func TestIntegration(t *testing.T) {
 	// add time to child1
 	childSpan1.Start()
 	time.Sleep(40 * time.Millisecond)
+
 	childSpan1.Finalize()
+	submitWorkerInput <- childSpan1.Finalize()
 
 	// add time to child1
 	childSpan2.Start()
 	time.Sleep(30 * time.Millisecond)
 	childSpan2.Finalize()
 
+	submitWorkerInput <- childSpan2
+
 	parentSpan.Finalize()
+	submitWorkerInput <- parentSpan
+
+	time.Sleep(1 * time.Second)
+	cancelSubmitWorker()
+
+	<-submitWorkerDone
+	fmt.Println("worker going down")
 
 	fmt.Println("TraceId: " + parentSpan.TraceId)
-	client.Submit(parentSpan, childSpan1, childSpan2)
 }

@@ -85,3 +85,19 @@ func NewClient(url string) Client {
 	c.Client = http.Client{}
 	return c
 }
+
+// SubmitAsyncWorker - creates a worker to submit spans centrally
+func (c *Client) SubmitAsyncWorker(input <-chan *Span, ctx context.Context, done chan<- bool) {
+	for {
+		select {
+		case <-ctx.Done():
+			done <- true
+			return
+		case span := <-input:
+			spanSubmitError := c.Submit(span)
+			if spanSubmitError != nil {
+				c.Logger.Printf("span submit error: %+q\n", spanSubmitError)
+			}
+		}
+	}
+}
