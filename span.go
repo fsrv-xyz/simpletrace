@@ -111,9 +111,21 @@ func (s *Span) NewChildSpan(options ...SpanOption) *Span {
 	return sub
 }
 
-func (s *Span) Start() {
+// NewCopiedChildSpan - Create a child Span of the Span s. Copy all other parameters of Span s
+func (s *Span) NewCopiedChildSpan(options ...SpanOption) *Span {
+	sub := s
+	options = append(options,
+		OptionTraceID(s.TraceId),
+		OptionFromParent(s.SpanId),
+	)
+	sub.Use(options...)
+	return sub
+}
+
+func (s *Span) Start() *Span {
 	s.startTime = time.Now()
 	s.Timestamp = time.Now().UnixMicro()
+	return s
 }
 
 func (s *Span) Finalize() *Span {
