@@ -60,18 +60,12 @@ func (s *Span) AddAnnotation(timestamp time.Time, value string) {
 
 func (s *Span) AddJsonAnnotation(timestamp time.Time, value interface{}) {
 	data, _ := json.Marshal(value)
-	s.Annotations = append(s.Annotations, Annotation{
-		Timestamp: timestamp.UnixMicro(),
-		Value:     string(data),
-	})
+	s.AddAnnotation(timestamp, string(data))
 }
 
 func (s *Span) AddXMLAnnotation(timestamp time.Time, value interface{}) {
 	data, _ := xml.Marshal(value)
-	s.Annotations = append(s.Annotations, Annotation{
-		Timestamp: timestamp.UnixMicro(),
-		Value:     string(data),
-	})
+	s.AddAnnotation(timestamp, string(data))
 }
 
 // Tag - assign a tag to the span
@@ -96,7 +90,8 @@ func NewSpan(options ...SpanOption) *Span {
 		mutex:   sync.Mutex{},
 		Tags:    make(map[string]string),
 	}
-	options = append(options, OptionFromParent(span.SpanId))
+	// prepend parenting operation
+	options = append([]SpanOption{OptionFromParent(span.SpanId)}, options...)
 
 	// apply span options
 	span.Use(options...)
@@ -106,20 +101,28 @@ func NewSpan(options ...SpanOption) *Span {
 // NewChildSpan - Create a child Span of the Span s. Rewrite the TraceId and ParentSpanId
 func (s *Span) NewChildSpan(options ...SpanOption) *Span {
 	sub := NewSpan(options...)
-	sub.Use(OptionTraceID(s.TraceId))
-	sub.Use(OptionFromParent(s.SpanId))
+	sub.Use(
+		OptionTraceID(s.TraceId),
+		OptionFromParent(s.SpanId),
+	)
 	return sub
 }
 
 // NewCopiedChildSpan - Create a child Span of the Span s. Copy all other parameters of Span s
 func (s *Span) NewCopiedChildSpan(options ...SpanOption) *Span {
-	sub := s
+	// create a copy of Span s
+	sub := *s
+
+	// add cloning options to child span options
 	options = append(options,
 		OptionTraceID(s.TraceId),
 		OptionFromParent(s.SpanId),
+		OptionSpanID(randomID(8)), // need to randomize the spanId to not overwrite parent span
 	)
+
+	// apply options to child span
 	sub.Use(options...)
-	return sub
+	return &sub
 }
 
 func (s *Span) Start() *Span {

@@ -27,7 +27,7 @@ func TestSpan_EnrichContext(t *testing.T) {
 	t.Run("matching SpanID", func(t *testing.T) {
 		if newspan.ParentSpanId != originSpan.SpanId {
 			t.Errorf(
-				"ID not matching %+v != %+v",
+				"spanId not matching %+v != %+v",
 				newspan.ParentSpanId,
 				originSpan.SpanId,
 			)

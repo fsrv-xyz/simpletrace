@@ -34,7 +34,12 @@ func SpanFromContextValues(ctx context.Context) (*Span, error) {
 	if !parentIdFound || !validateSpanID(spanId) || !traceIdFound || !validateTraceID(traceId) {
 		return nil, errors.New("one ore multiple context values not found/malformed")
 	}
-	span := NewSpan(OptionShared(), OptionSpanID(spanId), OptionFromParent(spanId), OptionTraceID(traceId))
+	span := NewSpan(
+		OptionShared(),
+		OptionTraceID(traceId),
+		OptionSpanID(spanId),
+		OptionFromParent(spanId),
+	)
 	return span, nil
 }
 
