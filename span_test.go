@@ -16,7 +16,7 @@ func TestIntegration(t *testing.T) {
 	// define the tracing client
 	client := NewClient("http://127.0.0.1:9411/spans")
 	client.Logger = log.Default()
-	go client.SubmitAsyncWorker(submitWorkerInput, ctx, submitWorkerDone)
+	go client.SubmitWorker(submitWorkerInput, ctx, submitWorkerDone)
 
 	// define the parent span
 	parentSpan := NewSpan(

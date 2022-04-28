@@ -86,8 +86,8 @@ func NewClient(url string) Client {
 	return c
 }
 
-// SubmitAsyncWorker - creates a worker to submit spans centrally
-func (c *Client) SubmitAsyncWorker(input <-chan *Span, ctx context.Context, done chan<- bool) {
+// SubmitWorker - creates a worker to submit spans centrally with input channel
+func (c *Client) SubmitWorker(input <-chan *Span, ctx context.Context, done chan<- bool) {
 	for {
 		select {
 		case <-ctx.Done():
