@@ -27,6 +27,7 @@ type ClientAuth struct {
 	Enable   bool
 	Username string
 	Password string
+	Header   string
 }
 
 // Submit - send the spans to the tracing endpoint synchronously
@@ -49,7 +50,10 @@ func (c *Client) Submit(spans ...*Span) error {
 	request.Header.Set("content-type", "application/json")
 
 	// set basic auth headers if enabled
-	if c.BasicAuth.Enable {
+	if c.BasicAuth.Header != "" && c.BasicAuth.Enable {
+		request.Header.Add("Authorization", "Basic "+c.BasicAuth.Header)
+	}
+	if c.BasicAuth.Enable && c.BasicAuth.Header == "" {
 		request.SetBasicAuth(c.BasicAuth.Username, c.BasicAuth.Password)
 	}
 
