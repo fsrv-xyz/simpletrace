@@ -9,14 +9,14 @@ import (
 )
 
 func TestIntegration(t *testing.T) {
-	submitWorkerInput := make(chan *Span, 2)
+	submitWorkerInput := make(chan *Span)
 	submitWorkerDone := make(chan bool)
 	ctx, cancelSubmitWorker := context.WithCancel(context.Background())
 
 	// define the tracing client
 	client := NewClient("http://127.0.0.1:9411/spans")
 	client.Logger = log.Default()
-	go client.SubmitWorker(submitWorkerInput, ctx, submitWorkerDone)
+	go client.SubmitAsyncWorker(submitWorkerInput, ctx, submitWorkerDone)
 
 	// define the parent span
 	parentSpan := NewSpan(
@@ -34,33 +34,26 @@ func TestIntegration(t *testing.T) {
 	// try to create a copied child span from `parentSpan`
 	childSpan1 := parentSpan.NewCopiedChildSpan(
 		OptionRemoteEndpoint("uffl1", "126.24.242.34"),
-		OptionLocalEndpoint("bla1", "fe80::1"),
 		OptionOfKind(KindClient),
-		OptionName("testing_sub"),
+		OptionName("testing_sub1"),
 	)
 	// try to create a child span from `parentSpan`
-	childSpan2 := parentSpan.NewChildSpan(
+	childSpan2 := parentSpan.NewCopiedChildSpan(
 		OptionRemoteEndpoint("uffl2", "126.24.242.34"),
-		OptionLocalEndpoint("bla2", "fe80::1"),
 		OptionOfKind(KindServer),
-		OptionName("testing_sub"),
+		OptionName("testing_sub2"),
 	)
 	// add time to child1
 	childSpan1.Start()
 	time.Sleep(40 * time.Millisecond)
-
-	childSpan1.Finalize()
 	submitWorkerInput <- childSpan1.Finalize()
 
 	// add time to child1
 	childSpan2.Start()
 	time.Sleep(30 * time.Millisecond)
-	childSpan2.Finalize()
+	submitWorkerInput <- childSpan2.Finalize()
 
-	submitWorkerInput <- childSpan2
-
-	parentSpan.Finalize()
-	submitWorkerInput <- parentSpan
+	submitWorkerInput <- parentSpan.Finalize()
 
 	time.Sleep(1 * time.Second)
 	cancelSubmitWorker()

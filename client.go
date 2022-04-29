@@ -40,7 +40,7 @@ func (c *Client) Submit(spans ...*Span) error {
 		return err
 	}
 	// build request
-	ctx, cancel := context.WithTimeout(context.Background(), 80*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 	defer cancel()
 	request, requestBuilderError := http.NewRequestWithContext(ctx, http.MethodPost, c.URL, bytes.NewBuffer(body))
 	if requestBuilderError != nil {
@@ -86,6 +86,7 @@ func (c *Client) SubmitAsync(errBack chan error, spans ...*Span) {
 func NewClient(url string) Client {
 	var c Client
 	c.URL = url
+	c.Logger = log.Default()
 	c.Client = http.Client{}
 	return c
 }
@@ -102,6 +103,19 @@ func (c *Client) SubmitWorker(input <-chan *Span, ctx context.Context, done chan
 			if spanSubmitError != nil {
 				c.Logger.Printf("span submit error: %+q\n", spanSubmitError)
 			}
+		}
+	}
+}
+
+// SubmitAsyncWorker - creates a worker to submit spans centrally with input channel
+func (c *Client) SubmitAsyncWorker(input <-chan *Span, ctx context.Context, done chan<- bool) {
+	for {
+		select {
+		case <-ctx.Done():
+			done <- true
+			return
+		case span := <-input:
+			c.SubmitAsync(nil, span)
 		}
 	}
 }
