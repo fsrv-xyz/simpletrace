@@ -35,16 +35,6 @@ func SpanFromContext(ctx context.Context) (*Span, error) {
 	return span, nil
 }
 
-// ClientFromContextValues - generate a Client with url from ctx
-func ClientFromContextValues(ctx context.Context) (*Client, error) {
-	clientURL, found := ctx.Value(HeaderTraceEndpoint).(string)
-	if !found {
-		return nil, fmt.Errorf("%+q not found in context", HeaderTraceEndpoint)
-	}
-	client := NewClient(clientURL)
-	return &client, nil
-}
-
 // SpanFromHttpHeader - generate the parent Span with parameters from request headers
 func SpanFromHttpHeader(r *http.Request) (*Span, error) {
 	spanId := r.Header.Get(string(HeaderParentSpanId))
