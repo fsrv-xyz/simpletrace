@@ -13,33 +13,25 @@ const (
 	HeaderTraceId       Header = "X-B3-TraceId"
 	HeaderParentSpanId  Header = "X-B3-ParentSpanId"
 	HeaderTraceEndpoint Header = "X-B3-TraceEndpoint"
+
+	ContextKeySpan Header = "simpletrace/span-context"
 )
 
 // EnrichContext - add required IDs/URLs to existing context
-func (s *Span) EnrichContext(ctx context.Context, client *Client) context.Context {
-	for key, value := range map[Header]string{
-		HeaderTraceEndpoint: client.URL,
-		HeaderTraceId:       s.TraceId,
-		HeaderParentSpanId:  s.ParentSpanId,
-	} {
-		ctx = context.WithValue(ctx, key, value)
-	}
+func (s *Span) EnrichContext(ctx context.Context) context.Context {
+	ctx = context.WithValue(ctx, ContextKeySpan, s)
 	return ctx
 }
 
-// SpanFromContextValues - generate the parent Span with values from ctx
-func SpanFromContextValues(ctx context.Context) (*Span, error) {
-	spanId, parentIdFound := ctx.Value(HeaderParentSpanId).(string)
-	traceId, traceIdFound := ctx.Value(HeaderTraceId).(string)
-	if !parentIdFound || !validateSpanID(spanId) || !traceIdFound || !validateTraceID(traceId) {
-		return nil, errors.New("one ore multiple context values not found/malformed")
+// SpanFromContext - generate the parent Span with values from ctx
+func SpanFromContext(ctx context.Context) (*Span, error) {
+	var span *Span
+	switch ctx.Value(ContextKeySpan).(type) {
+	case *Span:
+		span = ctx.Value(ContextKeySpan).(*Span)
+	default:
+		return nil, fmt.Errorf("value of %+q not found in context", ContextKeySpan)
 	}
-	span := NewSpan(
-		OptionShared(),
-		OptionTraceID(traceId),
-		OptionSpanID(spanId),
-		OptionFromParent(spanId),
-	)
 	return span, nil
 }
 

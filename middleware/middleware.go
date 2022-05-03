@@ -9,12 +9,15 @@ import (
 )
 
 type handler struct {
-	defaultTags map[string]string
-	next        http.Handler
-	client      *simpletrace.Client
+	defaultTags       map[string]string
+	next              http.Handler
+	spanSubmitChannel chan *simpletrace.Span
 }
 
 func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	if h.spanSubmitChannel == nil {
+		panic("spanSubmitChannel may not be empty")
+	}
 	span := simpletrace.NewSpan(
 		simpletrace.OptionName(request.RequestURI),
 		simpletrace.OptionOfKind(simpletrace.KindServer),
@@ -48,17 +51,14 @@ func (h *handler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 
 	span.Start()
 
-	// enrich http context with tracing information
-	ctx := span.EnrichContext(request.Context(), h.client)
-
 	// forward to handler with enriched context
-	h.next.ServeHTTP(recorder, request.WithContext(ctx))
+	h.next.ServeHTTP(recorder, request.WithContext(span.EnrichContext(request.Context())))
 
 	// set tags for response values
 	span.Tag("http.response.code", fmt.Sprintf("%d", recorder.Status))
 	span.Tag("http.response.size", fmt.Sprintf("%d", recorder.Size))
 	span.Finalize()
-	h.client.SubmitAsync(nil, span)
+	h.spanSubmitChannel <- span
 }
 
 type Option func(*handler)
@@ -71,11 +71,11 @@ func Tags(tags map[string]string) Option {
 }
 
 // NewMiddleware - create a new middleware with options
-func NewMiddleware(c *simpletrace.Client, options ...Option) func(http.Handler) http.Handler {
+func NewMiddleware(c chan *simpletrace.Span, options ...Option) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		h := &handler{
-			next:   next,
-			client: c,
+			next:              next,
+			spanSubmitChannel: c,
 		}
 		for _, option := range options {
 			option(h)
