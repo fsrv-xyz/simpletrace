@@ -10,12 +10,29 @@ import (
 type Header string
 
 const (
-	HeaderTraceId       Header = "X-B3-TraceId"
-	HeaderParentSpanId  Header = "X-B3-ParentSpanId"
-	HeaderTraceEndpoint Header = "X-B3-TraceEndpoint"
-
-	ContextKeySpan Header = "simpletrace/span-context"
+	HeaderTraceId           Header = "X-B3-TraceId"
+	HeaderParentSpanId      Header = "X-B3-ParentSpanId"
+	ContextKeySpan          Header = "simpletrace/span-context"
+	ContextSubmissionClient Header = "simpletrace/submission-context"
 )
+
+// EnrichContext - add required IDs/URLs to existing context
+func (c *Client) EnrichContext(ctx context.Context) context.Context {
+	ctx = context.WithValue(ctx, ContextSubmissionClient, c)
+	return ctx
+}
+
+// ClientFromContext - generate the span submission client with values from ctx
+func ClientFromContext(ctx context.Context) (*Client, error) {
+	var client *Client
+	switch ctx.Value(ContextSubmissionClient).(type) {
+	case *Client:
+		client = ctx.Value(ContextSubmissionClient).(*Client)
+	default:
+		return nil, fmt.Errorf("value of %+q not found in context", ContextSubmissionClient)
+	}
+	return client, nil
+}
 
 // EnrichContext - add required IDs/URLs to existing context
 func (s *Span) EnrichContext(ctx context.Context) context.Context {

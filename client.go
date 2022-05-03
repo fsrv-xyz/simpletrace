@@ -83,12 +83,12 @@ func (c *Client) SubmitAsync(errBack chan error, spans ...*Span) {
 }
 
 // NewClient - instantiate a new client with given url
-func NewClient(url string) Client {
+func NewClient(url string) *Client {
 	var c Client
 	c.URL = url
 	c.Logger = log.Default()
 	c.Client = http.Client{}
-	return c
+	return &c
 }
 
 // SubmitWorker - creates a worker to submit spans centrally with input channel

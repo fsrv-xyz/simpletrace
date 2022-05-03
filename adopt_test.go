@@ -5,6 +5,28 @@ import (
 	"testing"
 )
 
+func TestClient_EnrichContext(t *testing.T) {
+	originClient1 := NewClient("https://example.com")
+	originClient2 := NewClient("https://example.com")
+	ctx := context.Background()
+	newCtx := originClient1.EnrichContext(ctx)
+
+	newClient, err := ClientFromContext(newCtx)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Run("compare memory addresses of clients", func(t *testing.T) {
+		// positive test
+		if originClient1 != newClient {
+			t.Errorf("client pointer mismatch: %p and %p", originClient1, newClient)
+		}
+		// negative test
+		if originClient1 == originClient2 {
+			t.Errorf("unexpected client pointer match: %p and %p", originClient1, originClient2)
+		}
+	})
+}
+
 func TestSpan_EnrichContext(t *testing.T) {
 	originSpan1 := NewSpan(OptionName("test"))
 	originSpan2 := NewSpan(OptionName("test"))
@@ -23,25 +45,6 @@ func TestSpan_EnrichContext(t *testing.T) {
 		// negative test
 		if originSpan1 == originSpan2 {
 			t.Errorf("unexpected span pointer match: %p and %p", originSpan1, originSpan2)
-		}
-	})
-
-	t.Run("matching TraceId", func(t *testing.T) {
-		if newspan.TraceId != originSpan1.TraceId {
-			t.Errorf(
-				"traceId not matching %+v != %+v",
-				newspan.TraceId,
-				originSpan1.TraceId,
-			)
-		}
-	})
-	t.Run("matching SpanID", func(t *testing.T) {
-		if newspan.ParentSpanId != originSpan1.SpanId {
-			t.Errorf(
-				"spanId not matching %+v != %+v",
-				newspan.ParentSpanId,
-				originSpan1.SpanId,
-			)
 		}
 	})
 }
