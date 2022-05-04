@@ -2,16 +2,16 @@ package simpletrace
 
 import "context"
 
-type Embed struct {
-	client *Client
-	span   *Span
+type EmbeddedTracing struct {
+	Client *Client
+	Span   *Span
 }
 
 // ReadCtxValues - read context values for Client and Span
-func (e *Embed) ReadCtxValues(ctx context.Context) bool {
+func (e *EmbeddedTracing) ReadCtxValues(ctx context.Context) bool {
 	var clientParseError, spanParseError error
-	e.client, clientParseError = ClientFromContext(ctx)
-	e.span, spanParseError = SpanFromContext(ctx)
+	e.Client, clientParseError = ClientFromContext(ctx)
+	e.Span, spanParseError = SpanFromContext(ctx)
 	if clientParseError != nil || spanParseError != nil {
 		return false
 	}
@@ -19,9 +19,9 @@ func (e *Embed) ReadCtxValues(ctx context.Context) bool {
 }
 
 // CopyFromCtxValues - read context values and create a child span with NewCopiedChildSpan; pass options to child span
-func (e *Embed) CopyFromCtxValues(ctx context.Context, options ...SpanOption) bool {
+func (e *EmbeddedTracing) CopyFromCtxValues(ctx context.Context, options ...SpanOption) bool {
 	if e.ReadCtxValues(ctx) {
-		e.span = e.span.NewCopiedChildSpan(options...)
+		e.Span = e.Span.NewCopiedChildSpan(options...)
 		return true
 	}
 	return false
