@@ -17,3 +17,12 @@ func (e *Embed) ReadCtxValues(ctx context.Context) bool {
 	}
 	return true
 }
+
+// CopyFromCtxValues - read context values and create a child span with NewCopiedChildSpan; pass options to child span
+func (e *Embed) CopyFromCtxValues(ctx context.Context, options ...SpanOption) bool {
+	if e.ReadCtxValues(ctx) {
+		e.span = e.span.NewCopiedChildSpan(options...)
+		return true
+	}
+	return false
+}
