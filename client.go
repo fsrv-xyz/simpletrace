@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"runtime"
 	"time"
 )
 
@@ -48,6 +49,7 @@ func (c *Client) Submit(spans ...*Span) error {
 	}
 
 	request.Header.Set("content-type", "application/json")
+	request.Header.Set("user-agent", fmt.Sprintf("%s %s", "golang.fsrv.services/simpletrace", runtime.Version()))
 
 	// set basic auth headers if enabled
 	if c.BasicAuth.Header != "" && c.BasicAuth.Enable {

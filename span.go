@@ -71,12 +71,6 @@ func (s *Span) AddXMLAnnotation(timestamp time.Time, value interface{}) {
 // Tag - assign a tag to the span
 func (s *Span) Tag(key, value string) {
 	s.mutex.Lock()
-
-	if _, found := s.Tags[key]; found {
-		s.mutex.Unlock()
-		return
-	}
-
 	s.Tags[key] = value
 	s.mutex.Unlock()
 }
