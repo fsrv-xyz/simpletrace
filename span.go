@@ -70,9 +70,9 @@ func (s *Span) AddXMLAnnotation(timestamp time.Time, value interface{}) {
 
 // Tag - assign a tag to the span
 func (s *Span) Tag(key, value string) {
-	s.mutex.Lock()
+	s.Lock()
 	s.Tags[key] = value
-	s.mutex.Unlock()
+	s.Unlock()
 }
 
 // NewSpan - create a new span; assign default values; generate random IDs
@@ -128,4 +128,14 @@ func (s *Span) Start() *Span {
 func (s *Span) Finalize() *Span {
 	s.Duration = int(time.Since(s.startTime).Microseconds())
 	return s
+}
+
+func (s *Span) Lock() {
+	s.mutex.Lock()
+}
+
+func (s *Span) Unlock() {
+	if checkMutexLocked(s.mutex) {
+		s.mutex.Unlock()
+	}
 }

@@ -33,6 +33,14 @@ type ClientAuth struct {
 
 // Submit - send the spans to the tracing endpoint synchronously
 func (c *Client) Submit(spans ...*Span) error {
+	for spanIndex := range spans {
+		spans[spanIndex].Lock()
+	}
+	defer func() {
+		for spanIndex := range spans {
+			spans[spanIndex].Unlock()
+		}
+	}()
 	var err error
 	var response *http.Response
 

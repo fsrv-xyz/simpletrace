@@ -6,9 +6,13 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"reflect"
 	"regexp"
 	"strconv"
+	"sync"
 )
+
+const mutexLocked = 1
 
 func randomID(n int) string {
 	bytes := make([]byte, n)
@@ -57,4 +61,9 @@ func validateTraceID(id string) bool {
 func validateId(id, len string) bool {
 	regex := regexp.MustCompile(fmt.Sprintf(`^[a-f0-9]{%v}$`, len))
 	return regex.MatchString(id)
+}
+
+func checkMutexLocked(m sync.Mutex) bool {
+	state := reflect.ValueOf(m).Elem().FieldByName("state")
+	return state.Int()&mutexLocked == mutexLocked
 }
