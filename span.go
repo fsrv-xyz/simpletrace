@@ -135,7 +135,5 @@ func (s *Span) Lock() {
 }
 
 func (s *Span) Unlock() {
-	if checkMutexLocked(s.mutex) {
-		s.mutex.Unlock()
-	}
+	s.mutex.Unlock()
 }
