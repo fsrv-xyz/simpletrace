@@ -100,6 +100,7 @@ func (s *Span) NewChildSpan(options ...SpanOption) *Span {
 	sub.Use(
 		OptionTraceID(s.TraceId),
 		OptionFromParent(s.SpanId),
+		OptionShared(),
 	)
 	return sub
 }
@@ -114,6 +115,7 @@ func (s *Span) NewCopiedChildSpan(options ...SpanOption) *Span {
 		OptionTraceID(s.TraceId),
 		OptionFromParent(s.SpanId),
 		OptionSpanID(randomID(8)), // need to randomize the spanId to not overwrite parent span
+		OptionShared(),
 	)
 
 	// apply options to child span
