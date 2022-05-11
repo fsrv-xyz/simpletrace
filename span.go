@@ -72,8 +72,8 @@ func (s *Span) AddXMLAnnotation(timestamp time.Time, value interface{}) {
 // Tag - assign a tag to the span
 func (s *Span) Tag(key, value string) {
 	s.lock()
+	defer s.unlock()
 	s.Tags[key] = value
-	s.unlock()
 }
 
 // NewSpan - create a new span; assign default values; generate random IDs
@@ -110,6 +110,14 @@ func (s *Span) NewCopiedChildSpan(options ...SpanOption) *Span {
 	// create a copy of Span s
 	sub := *s
 
+	// cleanup tags; maps are references that needs to be cleaned while copying
+	sub.Tags = make(map[string]string)
+
+	// assign parent tags to child
+	for key, value := range s.Tags {
+		sub.Tags[key] = value
+	}
+
 	// add cloning options to child span options
 	options = append(options,
 		OptionTraceID(s.TraceId),
@@ -129,9 +137,15 @@ func (s *Span) Start() *Span {
 	return s
 }
 
-func (s *Span) Finalize() *Span {
+func (s *Span) RefreshDuration() *Span {
+	s.lock()
+	defer s.unlock()
 	s.Duration = int(time.Since(s.startTime).Microseconds())
 	return s
+}
+
+func (s *Span) Finalize() *Span {
+	return s.RefreshDuration()
 }
 
 func (s *Span) Valid() bool {

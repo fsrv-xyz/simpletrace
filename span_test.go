@@ -63,3 +63,54 @@ func TestIntegration(t *testing.T) {
 
 	fmt.Println("TraceId: " + parentSpan.TraceId)
 }
+
+func TestSpan_NewCopiedChildSpan(t *testing.T) {
+	parent := NewSpan(OptionName("test"))
+
+	child1 := parent.NewCopiedChildSpan()
+	child1.Tag("test", "testvalue")
+
+	t.Run("check if tags are not the same in child and parent span", func(t *testing.T) {
+		if len(parent.Tags) == len(child1.Tags) {
+			t.Error("parent and child tags are the same")
+		}
+	})
+}
+
+func TestSpan_NewChildSpan(t *testing.T) {
+	parent := NewSpan(OptionName("test"))
+
+	child1 := parent.NewChildSpan()
+	child1.Tag("test", "testvalue")
+
+	t.Run("check if tags are not the same in child and parent span", func(t *testing.T) {
+		if len(parent.Tags) == len(child1.Tags) {
+			t.Error("parent and child tags are the same")
+		}
+	})
+}
+
+func TestSpan_Valid(t *testing.T) {
+	for _, tt := range []struct {
+		Name           string
+		TestData       *Span
+		ExpectedResult bool
+	}{
+		{
+			Name:           "valid span",
+			TestData:       NewSpan(),
+			ExpectedResult: true,
+		},
+		{
+			Name:           "invalid span",
+			TestData:       &Span{},
+			ExpectedResult: false,
+		},
+	} {
+		t.Run(tt.Name, func(t *testing.T) {
+			if tt.ExpectedResult != tt.TestData.Valid() {
+				t.Error("testdata result is not as expected")
+			}
+		})
+	}
+}
