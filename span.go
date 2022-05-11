@@ -33,6 +33,7 @@ type Span struct {
 
 	startTime time.Time
 	mutex     sync.Mutex
+	valid     bool
 }
 
 type Service struct {
@@ -70,9 +71,9 @@ func (s *Span) AddXMLAnnotation(timestamp time.Time, value interface{}) {
 
 // Tag - assign a tag to the span
 func (s *Span) Tag(key, value string) {
-	s.Lock()
+	s.lock()
 	s.Tags[key] = value
-	s.Unlock()
+	s.unlock()
 }
 
 // NewSpan - create a new span; assign default values; generate random IDs
@@ -83,6 +84,7 @@ func NewSpan(options ...SpanOption) *Span {
 		TraceId: randomID(16),
 		mutex:   sync.Mutex{},
 		Tags:    make(map[string]string),
+		valid:   true,
 	}
 	// prepend parenting operation
 	options = append([]SpanOption{OptionFromParent(span.SpanId)}, options...)
@@ -130,10 +132,14 @@ func (s *Span) Finalize() *Span {
 	return s
 }
 
-func (s *Span) Lock() {
+func (s *Span) Valid() bool {
+	return s.valid
+}
+
+func (s *Span) lock() {
 	s.mutex.Lock()
 }
 
-func (s *Span) Unlock() {
+func (s *Span) unlock() {
 	s.mutex.Unlock()
 }
