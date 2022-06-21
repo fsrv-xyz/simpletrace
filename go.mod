@@ -1,3 +1,3 @@
-module golang.fsrv.services/simpletrace
+module simpletrace
 
 go 1.18
