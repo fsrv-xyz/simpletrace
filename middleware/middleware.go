@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"golang.fsrv.services/simpletrace"
+	"github.com/fsrv-xyz/simpletrace"
 )
 
 type handler struct {

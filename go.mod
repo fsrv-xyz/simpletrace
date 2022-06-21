@@ -1,3 +1,3 @@
-module simpletrace
+module github.com/fsrv-xyz/simpletrace
 
 go 1.18
