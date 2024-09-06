@@ -1,6 +1,6 @@
 ---
 default:
-  image: golang:latest@sha256:acfb46be39840f8c2a6b9efdd673c6627011200c73bab4e6d18b8b9ab4641c46
+  image: golang:latest@sha256:80cf6f99a6af101a6aee07c806803e2f4332002853ed4db7a07f4d5243a53af7
 
 stages:
   - test
